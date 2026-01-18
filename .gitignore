@@ -1,0 +1,8 @@
+# Configuración sensible (Base de Datos)
+src/main/resources/application.properties
+
+# Archivos de compilación y temporales
+target/
+.mvn/
+mvnw
+mvnw.cmd

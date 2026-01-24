@@ -76,6 +76,23 @@ public class ProductoServiceImpl implements ProductoService {
     public Optional<Producto> obtenerProductoByNombre(String nombre){
         return productoRepository.findByNombre(nombre);
     }
+    //Encontrar producto por nombres parecidos (ra -> raton, raquetas, etc)
+    @Override
+    public List<Producto> obtenerProductosByIniciales(String nombre){
+        if(nombre == null || nombre.trim().isEmpty()){
+            throw new RuntimeException("El termino de busqueda no puede estar vacio");
+        }
+        return productoRepository.findByNombreStartingWithIgnoreCase(nombre);
+    }
+
+    //Mostrar productos entre rangos de precios
+    @Override
+    public List<Producto> mostrarProductoMinMax(Double min, Double max){
+        if(min > max){
+            throw new RuntimeException("El precio minimo("+min+") no puede ser mayor a ("+max+")");
+        }
+        return productoRepository.findByPrecioBetween(min,max);
+    }
 
     //METODOS PRIVADOS
     private void filtroGuardado(Producto p){

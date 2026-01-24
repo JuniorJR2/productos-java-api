@@ -8,8 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/productos")
@@ -94,6 +96,29 @@ public class ProductoController {
             return ResponseEntity.ok(obtenerProducto.get());
         }else{
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontro el producto con el nombre: "+nombre);
+        }
+    }
+    @GetMapping("/buscar/inicial")
+    public ResponseEntity<?> obtenerProductoByIniciales (@RequestParam String nombre){
+        try{
+            List<Producto> productos = productoService.obtenerProductosByIniciales(nombre);
+            return ResponseEntity.ok(productos);
+        }catch (RuntimeException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+    @GetMapping("/buscar/precio")
+    public ResponseEntity<?> mostrarProductoMinMax(@RequestParam Double min, @RequestParam Double max){
+        try{
+            List<Producto> obtenerProductoByPrecio = productoService.mostrarProductoMinMax(min,max);
+            if(obtenerProductoByPrecio.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontraron productos en ese rango");
+            }
+            return ResponseEntity.ok(obtenerProductoByPrecio);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

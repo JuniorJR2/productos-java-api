@@ -17,6 +17,8 @@ public interface ProductoService {
     List<String> obtenerStockBajo();
 
     Optional<Producto> obtenerProductoByNombre(String nombre);
+    List<Producto> obtenerProductosByIniciales(String nombre);
 
+    List<Producto> mostrarProductoMinMax(Double min, Double max);
     Producto actualizarProducto(Long id,Producto producto);
 }

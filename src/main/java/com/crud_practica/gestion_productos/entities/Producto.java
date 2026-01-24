@@ -17,6 +17,15 @@ public class Producto {
     private String nombre;
     private String descripcion;
     private Double precio;
+    private Integer stock;
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
 
     public Producto() {}
 

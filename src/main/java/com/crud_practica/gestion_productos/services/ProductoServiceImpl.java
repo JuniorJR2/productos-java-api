@@ -1,10 +1,12 @@
 package com.crud_practica.gestion_productos.services;
 
+import com.crud_practica.gestion_productos.dto.ProductoDTO;
 import com.crud_practica.gestion_productos.entities.Producto;
 import com.crud_practica.gestion_productos.repositories.ProductoRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -18,14 +20,26 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     //Desarrollo de metodos publicos
+    /*Obtiene todo los productos sin DTO
     @Override
     public List<Producto> obtenerProductos(){
     return productoRepository.findAll();
-    }
+    }*/
 
+    //Obtener todos con DTO
+    @Override
+    public List<ProductoDTO> obtenerProductos(){
+        return productoRepository.findAll().stream().map(this::mapearADTO).toList();
+    }
+/*
     @Override
     public Optional<Producto> obtenerProductoById(Long id){
         return productoRepository.findById(id);
+    }
+*/
+    @Override
+    public Optional<ProductoDTO> obtenerProductoById(Long id){
+        return productoRepository.findById(id).map(this::mapearADTO);
     }
 
     @Override
@@ -65,24 +79,27 @@ public class ProductoServiceImpl implements ProductoService {
     //Encontrar nombres con stock bajos
     @Override
     public List<String> obtenerStockBajo(){
-        List<Producto> stockBajo = productoRepository.findAll();
-        return stockBajo.stream()
-                .filter(stock -> stock.getStock()<5 && stock.getStock() !=null)
-                .map(s ->  s.getNombre())
-                .collect(toList());
+        return productoRepository.findAll().stream()
+                .filter(stock -> stock.getStock() !=null && stock.getStock()<5)
+                .map(this::mapearADTO)
+                .map(p -> p.getNombre())
+                .toList();
     }
     //Encontrar productos por nombres
     @Override
-    public Optional<Producto> obtenerProductoByNombre(String nombre){
-        return productoRepository.findByNombre(nombre);
+    public Optional<ProductoDTO> obtenerProductoByNombre(String nombre){
+        return productoRepository.findByNombre(nombre).map(this::mapearADTO);
     }
     //Encontrar producto por nombres parecidos (ra -> raton, raquetas, etc)
     @Override
-    public List<Producto> obtenerProductosByIniciales(String nombre){
+    public List<ProductoDTO> obtenerProductosByIniciales(String nombre){
         if(nombre == null || nombre.trim().isEmpty()){
             throw new RuntimeException("El termino de busqueda no puede estar vacio");
         }
-        return productoRepository.findByNombreStartingWithIgnoreCase(nombre);
+
+        return productoRepository.findByNombreStartingWithIgnoreCase(nombre).stream()
+                .map(this::mapearADTO)
+                .toList();
     }
 
     //Mostrar productos entre rangos de precios
@@ -105,6 +122,16 @@ public class ProductoServiceImpl implements ProductoService {
         if( p.getDescripcion() == null || p.getDescripcion().trim().length() < 10 ){
             throw new RuntimeException("La descripcion debe contener mas de 10 caracteres y no puede estar vacio");
         }
+    }
+
+    private ProductoDTO mapearADTO(Producto p){
+        return new ProductoDTO(
+                p.getId(),
+                p.getPrecio(),
+                p.getNombre(),
+                p.getDescripcion(),
+                p.getStock()
+        );
     }
 
 

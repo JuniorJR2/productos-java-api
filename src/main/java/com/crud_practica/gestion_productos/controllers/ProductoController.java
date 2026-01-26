@@ -1,5 +1,6 @@
 package com.crud_practica.gestion_productos.controllers;
 
+import com.crud_practica.gestion_productos.dto.ProductoDTO;
 import com.crud_practica.gestion_productos.entities.Producto;
 import com.crud_practica.gestion_productos.services.ProductoService;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class ProductoController {
 
     //Metodo para obtener todos(GET)
     @GetMapping
-    public List<Producto> obtenerProductos(){
+    public List<ProductoDTO> obtenerProductos(){
         return productoService.obtenerProductos();
     }
 
@@ -48,7 +49,7 @@ public class ProductoController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<?>obtenerProductoById(@PathVariable Long id){
-        Optional<Producto> producto = productoService.obtenerProductoById(id);
+        Optional<ProductoDTO> producto = productoService.obtenerProductoById(id);
         if(producto.isPresent()){
             return ResponseEntity.ok(producto.get());
         }else {
@@ -91,7 +92,7 @@ public class ProductoController {
 
     @GetMapping("/buscar")
     public ResponseEntity<?> obtenerProductoByNombre(@RequestParam("nombre") String nombre){
-        Optional<Producto> obtenerProducto = productoService.obtenerProductoByNombre(nombre);
+        Optional<ProductoDTO> obtenerProducto = productoService.obtenerProductoByNombre(nombre);
         if(obtenerProducto.isPresent()){
             return ResponseEntity.ok(obtenerProducto.get());
         }else{
@@ -101,7 +102,7 @@ public class ProductoController {
     @GetMapping("/buscar/inicial")
     public ResponseEntity<?> obtenerProductoByIniciales (@RequestParam String nombre){
         try{
-            List<Producto> productos = productoService.obtenerProductosByIniciales(nombre);
+            List<ProductoDTO> productos = productoService.obtenerProductosByIniciales(nombre);
             return ResponseEntity.ok(productos);
         }catch (RuntimeException e){
             return ResponseEntity.badRequest().body(e.getMessage());

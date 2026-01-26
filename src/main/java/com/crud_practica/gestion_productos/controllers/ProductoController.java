@@ -81,7 +81,7 @@ public class ProductoController {
     }
 
     @GetMapping("/premium")
-    public List<Producto> obtenerProductosPremium(){
+    public List<ProductoDTO> obtenerProductosPremium(){
         return productoService.obtenerProductosPremium();
     }
 

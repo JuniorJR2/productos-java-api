@@ -14,7 +14,7 @@ public interface ProductoService {
     void borrarProducto(Long id);
     //FIN CRUD
     //INICIAN FUNCIONES EXTRAS
-    List<Producto> obtenerProductosPremium();
+    List<ProductoDTO> obtenerProductosPremium();
     List<String> obtenerStockBajo();
 
     Optional<ProductoDTO> obtenerProductoByNombre(String nombre);

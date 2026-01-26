@@ -70,10 +70,11 @@ public class ProductoServiceImpl implements ProductoService {
 
     //metodos publicos extras
     @Override
-    public List<Producto> obtenerProductosPremium() {
+    public List<ProductoDTO> obtenerProductosPremium() {
        List<Producto> productosPremium = productoRepository.findAll();
        return productosPremium.stream()
                .filter(p -> p.getPrecio() > 600)
+               .map(this::mapearADTO)
                .toList();
     }
     //Encontrar nombres con stock bajos

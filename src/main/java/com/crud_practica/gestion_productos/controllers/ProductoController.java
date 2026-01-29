@@ -1,8 +1,10 @@
 package com.crud_practica.gestion_productos.controllers;
 
 import com.crud_practica.gestion_productos.dto.ProductoDTO;
+import com.crud_practica.gestion_productos.dto.ProductoResumenDTO;
 import com.crud_practica.gestion_productos.entities.Producto;
 import com.crud_practica.gestion_productos.services.ProductoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +22,9 @@ import java.util.Optional;
 
 public class ProductoController {
 
-    private final ProductoService productoService;
+    @Autowired
+    ProductoService productoService;
+
 
     public ProductoController(ProductoService productoService) {
         this.productoService= productoService;
@@ -34,18 +38,15 @@ public class ProductoController {
 
     //Metodo para crear (POST)
     @PostMapping
-    public ResponseEntity<?> guardarProducto(@RequestBody Producto producto){
+    public ResponseEntity<?> guardarProducto(@RequestBody ProductoDTO dto){
         try{
-            //Se intenta guardar
-            Producto productoGuardado = productoService.guardarProducto(producto);
-            //Si todo sale bien, responde con el objeto y un status 201
-            return new ResponseEntity<>(productoGuardado, HttpStatus.CREATED);
+            ProductoDTO guardado = productoService.guardarProducto(dto);
+            return new ResponseEntity<>(guardado, HttpStatus.CREATED);
         }catch(RuntimeException e){
             // Si el Service lanzó un "throw", el error cae aquí
             // Respondemos con un 400 (Bad Request) y el mensaje de tu validación
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
     @GetMapping("/{id}")
     public ResponseEntity<?>obtenerProductoById(@PathVariable Long id){
@@ -60,15 +61,21 @@ public class ProductoController {
     }
 
     @DeleteMapping("/{id}")
-    public void borrarProducto(@PathVariable Long id){
-        productoService.borrarProducto(id);
+    public ResponseEntity<?> borrarProducto(@PathVariable Long id){
+       try{
+           productoService.borrarProducto(id);
+           return ResponseEntity.noContent().build();
+       }catch (RuntimeException e){
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+       }
+
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarProducto(@PathVariable Long id, @RequestBody Producto producto){
+    public ResponseEntity<?> actualizarProducto(@PathVariable Long id, @RequestBody ProductoDTO dto){
         try{
             // El Service ya busca, valida el precio/nombre y guarda. Todo en uno
-            Producto productoActualizado = productoService.actualizarProducto(id, producto);
+            ProductoDTO productoActualizado = productoService.actualizarProducto(id, dto);
             // Si el Service no lanzó error, respondemos con 200 OK
             return ResponseEntity.ok(productoActualizado);
 
@@ -88,6 +95,13 @@ public class ProductoController {
     @GetMapping("/stock-bajo")
     public List<String> obtenerStockBajo(){
         return productoService.obtenerStockBajo();
+    }
+    //buscar con Query
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductoResumenDTO>> buscar (@RequestParam(required = false) String nombre){
+        // Si nombre es null o vacío, podrías manejarlo para traer todos o una lista vacía
+        List<ProductoResumenDTO> resultados = productoService.obtenerResumen(nombre);
+        return ResponseEntity.ok(resultados);
     }
 
     @GetMapping("/buscar")
@@ -113,7 +127,7 @@ public class ProductoController {
     @GetMapping("/buscar/precio")
     public ResponseEntity<?> mostrarProductoMinMax(@RequestParam Double min, @RequestParam Double max){
         try{
-            List<Producto> obtenerProductoByPrecio = productoService.mostrarProductoMinMax(min,max);
+            List<ProductoDTO> obtenerProductoByPrecio = productoService.mostrarProductoMinMax(min,max);
             if(obtenerProductoByPrecio.isEmpty()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontraron productos en ese rango");
             }

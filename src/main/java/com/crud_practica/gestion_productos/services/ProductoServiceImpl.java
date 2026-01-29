@@ -1,17 +1,18 @@
 package com.crud_practica.gestion_productos.services;
 
 import com.crud_practica.gestion_productos.dto.ProductoDTO;
+import com.crud_practica.gestion_productos.dto.ProductoResumenDTO;
 import com.crud_practica.gestion_productos.entities.Producto;
 import com.crud_practica.gestion_productos.repositories.ProductoRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
+
+
 
     private final ProductoRepository productoRepository;
 
@@ -43,28 +44,35 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public Producto guardarProducto(Producto producto) {
-        filtroGuardado(producto);
-        return productoRepository.save(producto);
+    public ProductoDTO guardarProducto(ProductoDTO dto) {
+        Producto entidadParaGuardar = mapearAEntidad(dto);
+        filtroGuardado(entidadParaGuardar);
+        Producto guardado = productoRepository.save(entidadParaGuardar);
+        return mapearADTO(guardado);
     }
 
     @Override
     public void borrarProducto(Long id) {
+        if(!productoRepository.existsById(id)){
+            throw new RuntimeException("No se puede borrar: El producto con ID " + id + " no existe.");
+        }
        productoRepository.deleteById(id);
     }
 
     @Override
-    public Producto actualizarProducto(Long id, Producto productoDetalle) {
-        filtroGuardado(productoDetalle);
+    public ProductoDTO actualizarProducto(Long id, ProductoDTO dto) {
+        Producto entidadParaActualizar = mapearAEntidad(dto);
+        filtroGuardado(entidadParaActualizar);
         //Buscamos si existe
         return productoRepository.findById(id).map(productoExistente ->{
             //si existe, le ponemos los nuevos datos que vienen del front
-            productoExistente.setNombre(productoDetalle.getNombre());
-            productoExistente.setDescripcion(productoDetalle.getDescripcion());
-            productoExistente.setPrecio(productoDetalle.getPrecio());
-            productoExistente.setStock(productoDetalle.getStock());
+            productoExistente.setNombre(entidadParaActualizar.getNombre());
+            productoExistente.setDescripcion(entidadParaActualizar.getDescripcion());
+            productoExistente.setPrecio(entidadParaActualizar.getPrecio());
+            productoExistente.setStock(entidadParaActualizar.getStock());
             //guardamos los cambios
-            return productoRepository.save(productoExistente);
+            productoRepository.save(productoExistente);
+            return mapearADTO(productoExistente);
         }).orElseThrow(()-> new RuntimeException("No existe el producto con ID:" + id));
     }
 
@@ -102,14 +110,19 @@ public class ProductoServiceImpl implements ProductoService {
                 .map(this::mapearADTO)
                 .toList();
     }
-
+    @Override
+    public List<ProductoResumenDTO> obtenerResumen(String nombre){
+        // Si el nombre viene vacío, podrías mandar un string vacío para que el LIKE % % traiga todo
+        String filtro = (nombre == null) ? "" : nombre;
+        return productoRepository.buscarResumenByNombre(filtro);
+    }
     //Mostrar productos entre rangos de precios
     @Override
-    public List<Producto> mostrarProductoMinMax(Double min, Double max){
+    public List<ProductoDTO> mostrarProductoMinMax(Double min, Double max){
         if(min > max){
             throw new RuntimeException("El precio minimo("+min+") no puede ser mayor a ("+max+")");
         }
-        return productoRepository.findByPrecioBetween(min,max);
+        return productoRepository.findByPrecioBetween(min,max).stream().map(this::mapearADTO).toList();
     }
 
     //METODOS PRIVADOS
@@ -124,7 +137,7 @@ public class ProductoServiceImpl implements ProductoService {
             throw new RuntimeException("La descripcion debe contener mas de 10 caracteres y no puede estar vacio");
         }
     }
-
+ //Metodo para mapear (Entidad -> DTO)
     private ProductoDTO mapearADTO(Producto p){
         return new ProductoDTO(
                 p.getId(),
@@ -134,7 +147,17 @@ public class ProductoServiceImpl implements ProductoService {
                 p.getStock()
         );
     }
-
+    // Este es el nuevo (DTO -> Entidad)
+    private Producto mapearAEntidad(ProductoDTO dto) {
+        Producto p = new Producto();
+        // Nota: El ID no se setea aquí porque es creación (autoincremental)
+        p.setId(dto.getId()); //si es post el id es null y la bd autoincrementa, si es post obtiene el id
+        p.setNombre(dto.getNombre());
+        p.setDescripcion(dto.getDescripcion());
+        p.setPrecio(dto.getPrecio());
+        p.setStock(dto.getStock());
+        return p;
+    }
 
 }
 
